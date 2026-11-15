@@ -2,6 +2,7 @@
 ---
 title: "Penguin Population & Island Distribution"
 subtitle: "An Exploratory Data Analysis of Palmer Penguins"
+author: "Your Name"
 format:
   dashboard:
     orientation: columns
@@ -28,7 +29,9 @@ from palmerpenguins import load_penguins
 penguins = load_penguins()
 
 # Clean data
-penguin_data = penguins.dropna(subset=["species", "island"]).copy()
+penguin_data = penguins.dropna(
+    subset=["species", "island"]
+).copy()
 
 # Summary statistics
 total_penguins = len(penguin_data)
@@ -49,8 +52,15 @@ top_island = (
     .idxmax()
 )
 
-# Color palette
-colors = sns.color_palette("Dark2")
+# Consistent Dark2 color palette
+palette = sns.color_palette(
+    "Dark2",
+    n_colors=total_species
+)
+
+species_palette = dict(
+    zip(sorted(penguin_data["species"].unique()), palette)
+)
 ```
 
 ## Row {height=20%}
@@ -62,9 +72,7 @@ colors = sns.color_palette("Dark2")
 #| title: "Total Penguins Observed"
 #| color: primary
 
-dict(
-    value=total_penguins
-)
+dict(value=total_penguins)
 ```
 
 ### Penguin Species
@@ -74,9 +82,7 @@ dict(
 #| title: "Number of Species"
 #| color: success
 
-dict(
-    value=total_species
-)
+dict(value=total_species)
 ```
 
 ### Most Common Species
@@ -86,9 +92,7 @@ dict(
 #| title: "Most Observed Species"
 #| color: info
 
-dict(
-    value=top_species
-)
+dict(value=top_species)
 ```
 
 ### Most Populated Island
@@ -98,9 +102,7 @@ dict(
 #| title: "Island with Most Penguins"
 #| color: warning
 
-dict(
-    value=top_island
-)
+dict(value=top_island)
 ```
 
 ## Row {height=80%}
@@ -119,11 +121,15 @@ species_counts = (
     .reset_index()
 )
 
-species_counts.columns = ["species", "count"]
+species_counts.columns = [
+    "species",
+    "count"
+]
 
 # Sort species by population
 species_counts = species_counts.sort_values(
-    "count", ascending=False
+    "count",
+    ascending=False
 )
 
 # Create chart
@@ -132,7 +138,10 @@ fig, ax = plt.subplots(figsize=(7, 4.5))
 bars = ax.bar(
     species_counts["species"],
     species_counts["count"],
-    color=colors[:len(species_counts)],
+    color=[
+        species_palette[species]
+        for species in species_counts["species"]
+    ],
     width=0.65
 )
 
@@ -143,6 +152,7 @@ ax.bar_label(
     fontsize=11
 )
 
+# Chart title and labels
 ax.set_title(
     "Penguin Observations by Species",
     fontsize=14,
@@ -152,10 +162,15 @@ ax.set_title(
 ax.set_xlabel("Penguin Species")
 ax.set_ylabel("Number of Penguins")
 
+# Remove unnecessary borders
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 
-ax.set_ylim(0, species_counts["count"].max() * 1.15)
+# Add space above bars
+ax.set_ylim(
+    0,
+    species_counts["count"].max() * 1.15
+)
 
 plt.tight_layout()
 plt.show()
@@ -187,12 +202,16 @@ island_counts.plot(
     kind="bar",
     stacked=True,
     ax=ax,
-    color=colors[:len(island_counts.columns)],
+    color=[
+        species_palette[species]
+        for species in island_counts.columns
+    ],
     width=0.65
 )
 
 # Add labels inside each bar
 for container in ax.containers:
+
     labels = [
         str(int(value)) if value > 0 else ""
         for value in container.datavalues
@@ -206,6 +225,7 @@ for container in ax.containers:
         fontsize=10
     )
 
+# Chart title and labels
 ax.set_title(
     "Penguin Distribution Across Islands",
     fontsize=14,
@@ -215,6 +235,7 @@ ax.set_title(
 ax.set_xlabel("Island")
 ax.set_ylabel("Number of Penguins")
 
+# Legend
 ax.legend(
     title="Penguin Species",
     loc="upper center",
@@ -223,10 +244,16 @@ ax.legend(
     frameon=False
 )
 
+# Remove unnecessary borders
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 
-plt.xticks(rotation=0)
+# Keep island labels horizontal
+ax.tick_params(
+    axis="x",
+    labelrotation=0
+)
+
 plt.tight_layout()
 plt.show()
 ```
