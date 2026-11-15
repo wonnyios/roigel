@@ -1,0 +1,237 @@
+
+---
+title: "Penguin Population & Island Distribution"
+subtitle: "An Exploratory Data Analysis of Palmer Penguins"
+author: "Your Name"
+format:
+  dashboard:
+    orientation: columns
+    scrolling: false
+    theme: cosmo
+    title: "Penguin Population Dashboard"
+jupyter: python3
+execute:
+  echo: false
+  warning: false
+---
+
+```{python}
+#| label: setup
+#| include: false
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from palmerpenguins import load_penguins
+
+# Load dataset
+penguins = load_penguins()
+
+# Clean data
+penguin_data = penguins.dropna(subset=["species", "island"]).copy()
+
+# Summary statistics
+total_penguins = len(penguin_data)
+
+total_species = penguin_data["species"].nunique()
+
+# Most common species
+top_species = (
+    penguin_data["species"]
+    .value_counts()
+    .idxmax()
+)
+
+# Most populated island
+top_island = (
+    penguin_data["island"]
+    .value_counts()
+    .idxmax()
+)
+
+# Color palette
+colors = sns.color_palette("Dark2")
+```
+
+## Row {height=20%}
+
+### Total Penguins
+
+```{python}
+#| content: valuebox
+#| title: "Total Penguins Observed"
+#| color: primary
+
+dict(
+    value=total_penguins
+)
+```
+
+### Penguin Species
+
+```{python}
+#| content: valuebox
+#| title: "Number of Species"
+#| color: success
+
+dict(
+    value=total_species
+)
+```
+
+### Most Common Species
+
+```{python}
+#| content: valuebox
+#| title: "Most Observed Species"
+#| color: info
+
+dict(
+    value=top_species
+)
+```
+
+### Most Populated Island
+
+```{python}
+#| content: valuebox
+#| title: "Island with Most Penguins"
+#| color: warning
+
+dict(
+    value=top_island
+)
+```
+
+## Row {height=80%}
+
+### Species Distribution
+
+```{python}
+#| title: "Penguin Observations by Species"
+#| fig-height: 4.5
+#| fig-width: 7
+
+# Count penguins by species
+species_counts = (
+    penguin_data["species"]
+    .value_counts()
+    .reset_index()
+)
+
+species_counts.columns = ["species", "count"]
+
+# Sort species by population
+species_counts = species_counts.sort_values(
+    "count", ascending=False
+)
+
+# Create chart
+fig, ax = plt.subplots(figsize=(7, 4.5))
+
+bars = ax.bar(
+    species_counts["species"],
+    species_counts["count"],
+    color=colors[:len(species_counts)],
+    width=0.65
+)
+
+# Add data labels
+ax.bar_label(
+    bars,
+    padding=5,
+    fontsize=11
+)
+
+ax.set_title(
+    "Penguin Observations by Species",
+    fontsize=14,
+    pad=15
+)
+
+ax.set_xlabel("Penguin Species")
+ax.set_ylabel("Number of Penguins")
+
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+
+ax.set_ylim(0, species_counts["count"].max() * 1.15)
+
+plt.tight_layout()
+plt.show()
+```
+
+**Interpretation**
+
+Adelie penguins have the highest number of observations, with 152 penguins. Gentoo follows with 124 observations, while Chinstrap has the lowest count at 68.
+
+### Island Distribution by Species
+
+```{python}
+#| title: "Penguin Distribution Across Islands"
+#| fig-height: 4.5
+#| fig-width: 7
+
+# Count penguins by island and species
+island_counts = (
+    penguin_data
+    .groupby(["island", "species"])
+    .size()
+    .unstack(fill_value=0)
+)
+
+# Create stacked bar chart
+fig, ax = plt.subplots(figsize=(7, 4.5))
+
+island_counts.plot(
+    kind="bar",
+    stacked=True,
+    ax=ax,
+    color=colors[:len(island_counts.columns)],
+    width=0.65
+)
+
+# Add labels inside each bar
+for container in ax.containers:
+    labels = [
+        str(int(value)) if value > 0 else ""
+        for value in container.datavalues
+    ]
+
+    ax.bar_label(
+        container,
+        labels=labels,
+        label_type="center",
+        color="white",
+        fontsize=10
+    )
+
+ax.set_title(
+    "Penguin Distribution Across Islands",
+    fontsize=14,
+    pad=15
+)
+
+ax.set_xlabel("Island")
+ax.set_ylabel("Number of Penguins")
+
+ax.legend(
+    title="Penguin Species",
+    loc="upper center",
+    bbox_to_anchor=(0.5, -0.15),
+    ncol=3,
+    frameon=False
+)
+
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+
+plt.xticks(rotation=0)
+plt.tight_layout()
+plt.show()
+```
+
+**Interpretation**
+
+Biscoe Island has the highest penguin population, with 168 observations, followed by Dream Island with 124 and Torgersen Island with 52. Gentoo penguins are found on Biscoe, Chinstrap on Dream, and Adelie on all three islands.
