@@ -2,7 +2,6 @@
 ---
 title: "Penguin Population & Island Distribution"
 subtitle: "An Exploratory Data Analysis of Palmer Penguins"
-author: "Your Name"
 format:
   dashboard:
     orientation: columns
