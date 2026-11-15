@@ -1,24 +1,27 @@
-
 ---
 title: "Penguin Population & Island Distribution"
 subtitle: "An Exploratory Data Analysis of Palmer Penguins"
-author: "Your Name"
+
 format:
   dashboard:
     orientation: columns
     scrolling: false
     theme: cosmo
     title: "Penguin Population Dashboard"
+
 jupyter: python3
+
 execute:
   echo: false
   warning: false
+  message: false
 ---
 
 ```{python}
 #| label: setup
 #| include: false
 
+# Import libraries
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -53,13 +56,17 @@ top_island = (
 )
 
 # Consistent Dark2 color palette
+species_order = sorted(
+    penguin_data["species"].unique()
+)
+
 palette = sns.color_palette(
     "Dark2",
-    n_colors=total_species
+    n_colors=len(species_order)
 )
 
 species_palette = dict(
-    zip(sorted(penguin_data["species"].unique()), palette)
+    zip(species_order, palette)
 )
 ```
 
@@ -118,6 +125,7 @@ dict(value=top_island)
 species_counts = (
     penguin_data["species"]
     .value_counts()
+    .reindex(species_order)
     .reset_index()
 )
 
@@ -195,10 +203,15 @@ island_counts = (
     .unstack(fill_value=0)
 )
 
+# Set species order
+island_counts = island_counts.reindex(
+    columns=species_order
+)
+
 # Create stacked bar chart
 fig, ax = plt.subplots(figsize=(7, 4.5))
 
-island_counts.plot(
+_ = island_counts.plot(
     kind="bar",
     stacked=True,
     ax=ax,
